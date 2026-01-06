@@ -1,13 +1,22 @@
 const express = require("express");
-const payments = require("./payments");
+require("dotenv").config();
+
+const paymentsRoutes = require("./payments");
+const mpesaCallback = require("./mpesaCallback");
 
 const app = express();
 app.use(express.json());
 
-app.use("/api/payments", payments);
+app.use("/payments", paymentsRoutes);
+app.use("/mpesa/callback", mpesaCallback);
 
-app.listen(process.env.PORT || 3000, () =>
-  console.log("Server running")
-);
+app.get("/", (req, res) => {
+  res.send("🚀 OFFTHEHOOK Daraja LIVE API running");
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
 
 
