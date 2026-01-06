@@ -1,22 +1,17 @@
 const axios = require("axios");
-const getAccessToken = require("./auth");
+const { getAccessToken } = require("./auth");
 
-module.exports = async function stkPush(phone, amount) {
+const stkPush = async (phone, amount) => {
   const accessToken = await getAccessToken();
 
   const timestamp = new Date()
     .toISOString()
-    .replace(/[-:TZ.]/g, "")
+    .replace(/[^0-9]/g, "")
     .slice(0, 14);
 
   const password = Buffer.from(
-    process.env.MPESA_SHORTCODE +
-      process.env.MPESA_PASSKEY +
-      timestamp
+    `${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`
   ).toString("base64");
-
-  const url =
-    "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest";
 
   const payload = {
     BusinessShortCode: process.env.MPESA_SHORTCODE,
@@ -29,15 +24,23 @@ module.exports = async function stkPush(phone, amount) {
     PhoneNumber: phone,
     CallBackURL: process.env.MPESA_CALLBACK_URL,
     AccountReference: "OFFTHEHOOK",
-    TransactionDesc: "Payment",
+    TransactionDesc: "Payment"
   };
 
-  const response = await axios.post(url, payload, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  const { data } = await axios.post(
+    "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
 
-  return response.data;
+  return data;
 };
+
+module.exports = { stkPush };
+
 
