@@ -1,33 +1,24 @@
+require("dotenv").config();
 const express = require("express");
-const router = express.Router();
 
-const { stkPush } = require("./mpesa/stkPush");
-const { stkQuery } = require("./mpesa/stkQuery");
+const payments = require("./payments");
+const mpesaCallback = require("./mpesaCallback");
 
-// STK Push
-router.post("/stk-push", async (req, res) => {
-  try {
-    const { phone, amount } = req.body;
-    const response = await stkPush(phone, amount);
-    res.json(response);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
+const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => {
+  res.send("API is running");
 });
 
-// STK Query
-router.post("/stk-query", async (req, res) => {
-  try {
-    const { checkoutRequestID } = req.body;
-    const response = await stkQuery(checkoutRequestID);
-    res.json(response);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
+app.use("/api/payments", payments);
+app.use("/api/mpesa/callback", mpesaCallback);
 
-module.exports = router;
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
 
 
