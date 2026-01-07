@@ -1,15 +1,18 @@
 const axios = require("axios");
 const getAccessToken = require("./auth");
 
-module.exports = async (req, res) => {
+module.exports = async function stkPush(req, res) {
   try {
     const { phone, amount } = req.body;
 
     if (!phone || !amount) {
-      return res.status(400).json({ error: "Phone and amount required" });
+      return res.status(400).json({
+        error: "Phone and amount are required"
+      });
     }
 
     const token = await getAccessToken();
+
     const timestamp = new Date()
       .toISOString()
       .replace(/[-T:\.Z]/g, "")
@@ -44,11 +47,11 @@ module.exports = async (req, res) => {
       }
     );
 
-    res.json(response.data);
+    return res.json(response.data);
   } catch (error) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "STK Push failed" });
+    console.error("STK PUSH ERROR:", error.response?.data || error.message);
+    return res.status(500).json({
+      error: "Failed to initiate STK Push"
+    });
   }
 };
-
-
