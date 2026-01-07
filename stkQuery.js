@@ -15,7 +15,7 @@ module.exports = async function stkQuery(req, res) {
 
     const timestamp = new Date()
       .toISOString()
-      .replace(/[-T:\.Z]/g, "")
+      .replace(/[-T:.Z]/g, "")
       .slice(0, 14);
 
     const password = Buffer.from(
@@ -41,11 +41,17 @@ module.exports = async function stkQuery(req, res) {
     );
 
     return res.json(response.data);
+
   } catch (error) {
-    console.error("STK QUERY ERROR:", error.response?.data || error.message);
+    console.error(
+      "STK QUERY ERROR:",
+      error.response?.data || error.message
+    );
+
     return res.status(500).json({
       error: "Failed to query STK status"
     });
   }
 };
+
 
