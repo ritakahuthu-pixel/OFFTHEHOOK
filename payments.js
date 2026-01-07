@@ -1,38 +1,19 @@
 const express = require("express");
+const stkPush = require("./stkPush");
+const stkQuery = require("./stkQuery");
+
 const router = express.Router();
 
-const { stkPush } = require("./stkPush");
-const { stkQuery } = require("./stkQuery");
+/**
+ * Initiate STK Push
+ */
+router.post("/stk-push", stkPush);
 
-router.post("/stk-push", async (req, res) => {
-  try {
-    const { phone, amount } = req.body;
-
-    if (!phone || !amount) {
-      return res.status(400).json({ message: "Phone and amount required" });
-    }
-
-    const result = await stkPush(phone, amount);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.post("/stk-query", async (req, res) => {
-  try {
-    const { checkoutRequestID } = req.body;
-
-    if (!checkoutRequestID) {
-      return res.status(400).json({ message: "CheckoutRequestID required" });
-    }
-
-    const result = await stkQuery(checkoutRequestID);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+/**
+ * Query STK Push status
+ */
+router.post("/stk-query", stkQuery);
 
 module.exports = router;
+
 
