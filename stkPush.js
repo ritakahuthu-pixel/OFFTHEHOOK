@@ -1,17 +1,24 @@
 const axios = require("axios");
-const { getAccessToken } = require("./auth");
+const getAccessToken = require("./auth");
 
-async function stkPush(phone, amount) {
+module.exports = async (req, res) => {
   try {
-    const token = await getAccessToken();
+    const { phone, amount } = req.body;
 
+    if (!phone || !amount) {
+      return res.status(400).json({ error: "Phone and amount required" });
+    }
+
+    const token = await getAccessToken();
     const timestamp = new Date()
       .toISOString()
-      .replace(/[-T:.Z]/g, "")
+      .replace(/[-T:\.Z]/g, "")
       .slice(0, 14);
 
     const password = Buffer.from(
-      `${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`
+      process.env.MPESA_SHORTCODE +
+      process.env.MPESA_PASSKEY +
+      timestamp
     ).toString("base64");
 
     const response = await axios.post(
@@ -20,28 +27,28 @@ async function stkPush(phone, amount) {
         BusinessShortCode: process.env.MPESA_SHORTCODE,
         Password: password,
         Timestamp: timestamp,
-        TransactionType: "CustomerPayBillOnline",
+        TransactionType: "CustomerBuyGoodsOnline",
         Amount: amount,
         PartyA: phone,
         PartyB: process.env.MPESA_SHORTCODE,
         PhoneNumber: phone,
-        CallBackURL: process.env.MPESA_CALLBACK_URL,
-        AccountReference: "PHONEMART",
+        CallBackURL: process.env.CALLBACK_URL,
+        AccountReference: "OFFTHEHOOK",
         TransactionDesc: "Payment"
       },
       {
         headers: {
           Authorization: `Bearer ${token}`,
-        },
+          "Content-Type": "application/json"
+        }
       }
     );
 
-    return response.data;
+    res.json(response.data);
   } catch (error) {
-    console.error("❌ STK PUSH ERROR:", error.response?.data || error.message);
-    throw new Error("STK Push failed");
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: "STK Push failed" });
   }
-}
+};
 
-module.exports = { stkPush };
 
