@@ -1,46 +1,28 @@
-const axios = require("axios");
-const { getAccessToken } = require("./auth");
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 
-function getTimestamp() {
-  const now = new Date();
-  return (
-    now.getFullYear().toString() +
-    String(now.getMonth() + 1).padStart(2, "0") +
-    String(now.getDate()).padStart(2, "0") +
-    String(now.getHours()).padStart(2, "0") +
-    String(now.getMinutes()).padStart(2, "0") +
-    String(now.getSeconds()).padStart(2, "0")
-  );
-}
+const paymentsRoutes = require("./payments");
+const mpesaCallbackRoutes = require("./mpesaCallback");
 
-async function stkQuery(checkoutRequestID) {
-  const accessToken = await getAccessToken();
-  const timestamp = getTimestamp();
+const app = express();
 
-  const password = Buffer.from(
-    process.env.MPESA_SHORTCODE +
-      process.env.MPESA_PASSKEY +
-      timestamp
-  ).toString("base64");
+/* MIDDLEWARE — MUST COME FIRST */
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-  const payload = {
-    BusinessShortCode: process.env.MPESA_SHORTCODE,
-    Password: password,
-    Timestamp: timestamp,
-    CheckoutRequestID: checkoutRequestID
-  };
+/* HEALTH CHECK */
+app.get("/", (req, res) => {
+  res.send("OFFTHEHOOK API is live");
+});
 
-  const response = await axios.post(
-    "https://api.safaricom.co.ke/mpesa/stkpushquery/v1/query",
-    payload,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
-    }
-  );
+/* ROUTES */
+app.use("/payments", paymentsRoutes);
+app.use("/mpesa", mpesaCallbackRoutes);
 
-  return response.data;
-}
-
-module.exports = { stkQuery };
+/* SERVER */
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
