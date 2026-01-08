@@ -1,46 +1,46 @@
- const express = require("express");
-const router = express.Router();
-const { initiateSTKPush } = require("./stkPush");
-const { stkQuery } = require("./stkQuery");
+const axios = require("axios");
+const { getAccessToken } = require("./auth");
 
-/* STK PUSH */
-router.post("/stk-push", async (req, res) => {
-  try {
-    const { phone, amount } = req.body;
+function getTimestamp() {
+  const now = new Date();
+  return (
+    now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, "0") +
+    String(now.getDate()).padStart(2, "0") +
+    String(now.getHours()).padStart(2, "0") +
+    String(now.getMinutes()).padStart(2, "0") +
+    String(now.getSeconds()).padStart(2, "0")
+  );
+}
 
-    if (!phone || !amount) {
-      return res.status(400).json({
-        error: "phone and amount are required"
-      });
+async function stkQuery(checkoutRequestID) {
+  const accessToken = await getAccessToken();
+  const timestamp = getTimestamp();
+
+  const password = Buffer.from(
+    process.env.MPESA_SHORTCODE +
+      process.env.MPESA_PASSKEY +
+      timestamp
+  ).toString("base64");
+
+  const payload = {
+    BusinessShortCode: process.env.MPESA_SHORTCODE,
+    Password: password,
+    Timestamp: timestamp,
+    CheckoutRequestID: checkoutRequestID
+  };
+
+  const response = await axios.post(
+    "https://api.safaricom.co.ke/mpesa/stkpushquery/v1/query",
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
     }
+  );
 
-    const result = await initiateSTKPush(phone, amount);
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("STK PUSH ERROR:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to initiate STK push" });
-  }
-});
+  return response.data;
+}
 
-/* STK QUERY */
-router.post("/stk-query", async (req, res) => {
-  try {
-    const { checkoutRequestID } = req.body;
-
-    if (!checkoutRequestID) {
-      return res.status(400).json({
-        error: "checkoutRequestID is required"
-      });
-    }
-
-    const result = await stkQuery(checkoutRequestID);
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("STK QUERY ERROR:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to query STK status" });
-  }
-});
-
-module.exports = router;
-
-
+module.exports = { stkQuery }; 
