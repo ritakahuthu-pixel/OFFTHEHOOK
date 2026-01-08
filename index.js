@@ -1,19 +1,36 @@
-import express from "express";
-import callback from "./callback.js";
-import { stkPush } from "./stk.js";
-
+const express = require("express");
 const app = express();
-app.use(express.json());
-app.use(callback);
 
-app.post("/pay", async (req, res) => {
-  const { phone, amount, reference } = req.body;
-  try {
-    const result = await stkPush(phone, amount, reference);
-    res.json(result.data);
-  } catch(e){
-    res.status(500).json({error:e.message});
-  }
+// 🔴 MUST BE AT THE TOP
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+const stkPushRoutes = require("./routes/stkPush");
+const stkQueryRoutes = require("./routes/stkQuery");
+
+// Mount routes
+app.use("/payments", stkPushRoutes);
+app.use("/payments", stkQueryRoutes);
+
+// STK CALLBACK (Safaricom hits this)
+app.post("/payment/callback", (req, res) => {
+  console.log("📥 STK CALLBACK RECEIVED");
+  console.log(JSON.stringify(req.body, null, 2));
+
+  res.status(200).json({
+    ResultCode: 0,
+    ResultDesc: "Accepted"
+  });
 });
 
-app.listen(3000, ()=>console.log("MPESA LIVE SERVER RUNNING"));
+// Health check
+app.get("/", (req, res) => {
+  res.send("OFFTHEHOOK API is live");
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
