@@ -14,52 +14,44 @@ function getTimestamp() {
 }
 
 async function initiateSTKPush(phone, amount) {
-  try {
-    const accessToken = await getAccessToken();
-    const timestamp = getTimestamp();
+  const accessToken = await getAccessToken();
+  const timestamp = getTimestamp();
 
-    const password = Buffer.from(
-      process.env.MPESA_SHORTCODE +
-        process.env.MPESA_PASSKEY +
-        timestamp
-    ).toString("base64");
+  const password = Buffer.from(
+    process.env.MPESA_SHORTCODE +
+      process.env.MPESA_PASSKEY +
+      timestamp
+  ).toString("base64");
 
-    const payload = {
-      BusinessShortCode: process.env.MPESA_SHORTCODE,
-      Password: password,
-      Timestamp: timestamp,
+  const payload = {
+    BusinessShortCode: process.env.MPESA_SHORTCODE, // 9512320
+    Password: password,
+    Timestamp: timestamp,
 
-      // 🔥 TILL NUMBER TRANSACTION TYPE
-      TransactionType: "CustomerBuyGoodsOnline",
+    TransactionType: "CustomerBuyGoodsOnline",
 
-      Amount: Number(amount),
-      PartyA: phone,
-      PartyB: process.env.MPESA_SHORTCODE,
-      PhoneNumber: phone,
-      CallBackURL: process.env.MPESA_CALLBACK_URL,
-      AccountReference: "OFFTHEHOOK",
-      TransactionDesc: "OFFTHEHOOK Payment"
-    };
+    Amount: Number(amount),
+    PartyA: phone,
+    PartyB: "5619444", // ✅ TILL RECEIVING MONEY
+    PhoneNumber: phone,
 
-    const response = await axios.post(
-      "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
+    CallBackURL: process.env.MPESA_CALLBACK_URL,
+    AccountReference: "OFFTHEHOOK",
+    TransactionDesc: "OFFTHEHOOK Payment"
+  };
+
+  const response = await axios.post(
+    "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
       }
-    );
+    }
+  );
 
-    return response.data;
-  } catch (error) {
-    console.error(
-      "STK PUSH DARAJA ERROR:",
-      error.response?.data || error.message
-    );
-    throw error;
-  }
+  return response.data;
 }
 
 module.exports = { initiateSTKPush };
