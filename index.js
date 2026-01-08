@@ -1,16 +1,46 @@
-const express = require("express");
-const paymentsRoutes = require("./payments");
+const axios = require("axios");
+const { getAccessToken } = require("./auth");
 
-const app = express();
-app.use(express.json());
+function getTimestamp() {
+  const now = new Date();
+  return (
+    now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, "0") +
+    String(now.getDate()).padStart(2, "0") +
+    String(now.getHours()).padStart(2, "0") +
+    String(now.getMinutes()).padStart(2, "0") +
+    String(now.getSeconds()).padStart(2, "0")
+  );
+}
 
-app.get("/", (req, res) => {
-  res.send("OFFTHEHOOK API is live");
-});
+async function stkQuery(checkoutRequestID) {
+  const accessToken = await getAccessToken();
+  const timestamp = getTimestamp();
 
-app.use("/payments", paymentsRoutes);
+  const password = Buffer.from(
+    process.env.MPESA_SHORTCODE +
+      process.env.MPESA_PASSKEY +
+      timestamp
+  ).toString("base64");
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  const payload = {
+    BusinessShortCode: process.env.MPESA_SHORTCODE,
+    Password: password,
+    Timestamp: timestamp,
+    CheckoutRequestID: checkoutRequestID
+  };
+
+  const response = await axios.post(
+    "https://api.safaricom.co.ke/mpesa/stkpushquery/v1/query",
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    }
+  );
+
+  return response.data;
+}
+
+module.exports = { stkQuery };
