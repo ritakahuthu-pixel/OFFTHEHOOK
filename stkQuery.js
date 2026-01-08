@@ -1,64 +1,46 @@
- const axios = require("axios");
+ const express = require("express");
+const router = express.Router();
+const { initiateSTKPush } = require("./stkPush");
+const { stkQuery } = require("./stkQuery");
 
-module.exports = async (req, res) => {
+/* STK PUSH */
+router.post("/stk-push", async (req, res) => {
+  try {
+    const { phone, amount } = req.body;
+
+    if (!phone || !amount) {
+      return res.status(400).json({
+        error: "phone and amount are required"
+      });
+    }
+
+    const result = await initiateSTKPush(phone, amount);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("STK PUSH ERROR:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to initiate STK push" });
+  }
+});
+
+/* STK QUERY */
+router.post("/stk-query", async (req, res) => {
   try {
     const { checkoutRequestID } = req.body;
 
     if (!checkoutRequestID) {
-      return res.status(400).json({ error: "checkoutRequestID is required" });
+      return res.status(400).json({
+        error: "checkoutRequestID is required"
+      });
     }
 
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[-:TZ.]/g, "")
-      .slice(0, 14);
-
-    const password = Buffer.from(
-      process.env.MPESA_SHORTCODE +
-      process.env.MPESA_PASSKEY +
-      timestamp
-    ).toString("base64");
-
-    const auth = Buffer.from(
-      process.env.MPESA_CONSUMER_KEY +
-      ":" +
-      process.env.MPESA_CONSUMER_SECRET
-    ).toString("base64");
-
-    const tokenResponse = await axios.get(
-      "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-      {
-        headers: { Authorization: `Basic ${auth}` }
-      }
-    );
-
-    const accessToken = tokenResponse.data.access_token;
-
-    const response = await axios.post(
-      "https://api.safaricom.co.ke/mpesa/stkpushquery/v1/query",
-      {
-        BusinessShortCode: process.env.MPESA_SHORTCODE,
-        Password: password,
-        Timestamp: timestamp,
-        CheckoutRequestID: checkoutRequestID
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-
-    res.json(response.data);
-
+    const result = await stkQuery(checkoutRequestID);
+    res.status(200).json(result);
   } catch (error) {
     console.error("STK QUERY ERROR:", error.response?.data || error.message);
-    res.status(500).json({
-      error: "Failed to query STK",
-      details: error.response?.data || error.message
-    });
+    res.status(500).json({ error: "Failed to query STK status" });
   }
-};
+});
+
+module.exports = router;
 
 
