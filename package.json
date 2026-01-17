@@ -2,7 +2,6 @@
   "name": "offthehook-daraja-live",
   "version": "1.0.0",
   "description": "M-Pesa Daraja LIVE STK Push & Query",
-  "type": "module"
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
