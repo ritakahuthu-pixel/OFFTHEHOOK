@@ -13,19 +13,22 @@ router.post("/stk-push", async (req, res) => {
       });
     }
 
+    // ✅ PASS OBJECT (not separate parameters)
     const result = await stkPush({
       phone,
-      amount
+      amount,
+      accountReference: "OFFTHEHOOK",
+      transactionDesc: "Payment"
     });
 
     res.json(result);
 
   } catch (error) {
-    console.error("🔥 STK Error:", error.response?.data || error.message);
+    console.error("❌ STK Error:", error.response?.data || error.message);
 
     res.status(500).json({
       error: "Failed to initiate payment",
-      details: error.response?.data || error.message
+      details: error.response?.data
     });
   }
 });
