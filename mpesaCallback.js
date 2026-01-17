@@ -1,4 +1,3 @@
-mpesa callback👇
 import express from "express";
 
 const router = express.Router();
