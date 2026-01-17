@@ -33,7 +33,17 @@ export async function stkPush({
 
     const shortCode = process.env.MPESA_SHORTCODE;
     const passkey = process.env.MPESA_PASSKEY;
-    const callbackUrl = process.env.MPESA_CALLBACK_URL;
+
+    // ✅ TEMP: Hardcode callback to avoid env issues
+    const callbackUrl =
+      process.env.MPESA_CALLBACK_URL ||
+      "https://offthehook.onrender.com/payment/callback";
+
+    if (!shortCode || !passkey || !callbackUrl) {
+      throw new Error("Missing MPESA environment variables");
+    }
+
+    console.log("📞 Callback URL:", callbackUrl);
 
     const timestamp = generateTimestamp();
     const password = generatePassword(shortCode, passkey, timestamp);
@@ -43,7 +53,7 @@ export async function stkPush({
       Password: password,
       Timestamp: timestamp,
       TransactionType: "CustomerPayBillOnline",
-      Amount: amount,
+      Amount: Number(amount),
       PartyA: phone,
       PartyB: shortCode,
       PhoneNumber: phone,
@@ -52,6 +62,8 @@ export async function stkPush({
       TransactionDesc: transactionDesc
     };
 
+    console.log("🚀 Sending STK payload:", payload);
+
     const response = await axios.post(
       "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
       payload,
@@ -59,13 +71,19 @@ export async function stkPush({
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
-        }
+        },
+        timeout: 15000
       }
     );
 
+    console.log("✅ Safaricom Response:", response.data);
+
     return response.data;
   } catch (error) {
-    console.error("❌ STK Push Error:", error.response?.data || error.message);
+    console.error(
+      "❌ STK Push Error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
