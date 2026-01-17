@@ -1,4 +1,3 @@
-stk push jsn👇
 import axios from "axios";
 import { getAccessToken } from "./auth.js";
 
