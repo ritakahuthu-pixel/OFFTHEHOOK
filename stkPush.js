@@ -1,71 +1,42 @@
-const axios = require("axios");
-const { getAccessToken } = require("./auth");
+stk push jsn👇
+import axios from "axios";
+import { getAccessToken } from "./auth.js";
 
-/* =========================
-   HELPERS
-========================= */
-function getTimestamp() {
-  const now = new Date();
-  return (
-    now.getFullYear().toString() +
-    String(now.getMonth() + 1).padStart(2, "0") +
-    String(now.getDate()).padStart(2, "0") +
-    String(now.getHours()).padStart(2, "0") +
-    String(now.getMinutes()).padStart(2, "0") +
-    String(now.getSeconds()).padStart(2, "0")
-  );
-}
+export async function stkPush(phone, amount) {
+  const token = await getAccessToken();
 
-function formatPhone(phone) {
-  if (phone.startsWith("0")) return "254" + phone.slice(1);
-  if (phone.startsWith("+")) return phone.slice(1);
-  return phone;
-}
-
-/* =========================
-   STK PUSH
-========================= */
-async function initiateSTKPush(phone, amount) {
-  const accessToken = await getAccessToken();
-  const timestamp = getTimestamp();
-  const formattedPhone = formatPhone(phone);
+  const timestamp = new Date()
+    .toISOString()
+    .replace(/[^0-9]/g, "")
+    .slice(0, 14);
 
   const password = Buffer.from(
-    process.env.MPESA_SHORTCODE +
-      process.env.MPESA_PASSKEY +
-      timestamp
+    process.env.SHORT_CODE + process.env.PASSKEY + timestamp
   ).toString("base64");
 
   const payload = {
-    BusinessShortCode: process.env.MPESA_SHORTCODE,
+    BusinessShortCode: process.env.SHORT_CODE,
     Password: password,
     Timestamp: timestamp,
-    TransactionType: "CustomerBuyGoodsOnline",
-    Amount: Number(amount),
-    PartyA: formattedPhone,
-    PartyB: process.env.MPESA_TILL_NUMBER, // ✅ 5619444
-    PhoneNumber: formattedPhone,
-    CallBackURL: process.env.MPESA_CALLBACK_URL,
+    TransactionType: "CustomerPayBillOnline",
+    Amount: amount,
+    PartyA: phone,
+    PartyB: process.env.SHORT_CODE,
+    PhoneNumber: phone,
+    CallBackURL: process.env.CALLBACK_URL,
     AccountReference: "OFFTHEHOOK",
-    TransactionDesc: "OFFTHEHOOK Payment"
+    TransactionDesc: "Payment"
   };
-
-  console.log("📤 STK PUSH PAYLOAD:", payload);
 
   const response = await axios.post(
     "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
     payload,
     {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      }
+        Authorization: `Bearer ${token}`,
+      },
     }
   );
 
-  console.log("✅ STK PUSH RESPONSE:", response.data);
-
   return response.data;
 }
-
-module.exports = { initiateSTKPush };
