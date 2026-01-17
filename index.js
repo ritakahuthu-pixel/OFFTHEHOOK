@@ -1,28 +1,28 @@
-const express = require("express");
-const cors = require("cors");
-require("dotenv").config();
+index js👇
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
 
-const paymentsRoutes = require("./payments");
-const mpesaCallbackRoutes = require("./mpesaCallback");
+import paymentsRoute from "./payments.js";
+import callbackRoute from "./mpesaCallback.js";
+
+dotenv.config();
 
 const app = express();
-
-/* MIDDLEWARE — MUST COME FIRST */
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-/* HEALTH CHECK */
+/* Health check */
 app.get("/", (req, res) => {
-  res.send("OFFTHEHOOK API is live");
+  res.send("OFFTHEHOOK MPESA API RUNNING 🚀");
 });
 
-/* ROUTES */
-app.use("/payments", paymentsRoutes);
-app.use("/mpesa", mpesaCallbackRoutes);
+/* Routes */
+app.use("/payment", paymentsRoute);
+app.use("/payment", callbackRoute);
 
-/* SERVER */
-const PORT = process.env.PORT || 3000;
+/* IMPORTANT: Render Port Fix */
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
