@@ -1,27 +1,21 @@
-import express from "express";
-import { stkPush } from "./stkPush.js";
+payment js
 
-const router = express.Router();
+router.post("/payment/stk-push", async (req, res) => {
+  const { phone, amount } = req.body;
 
-router.post("/stk-push", async (req, res) => {
+  if (!phone || !amount) {
+    return res.status(400).json({ error: "Phone and amount are required" });
+  }
+
   try {
-    const { phone, amount } = req.body;
+    const response = await stkPush({ phone, amount });
+    res.json(response);
+  } catch (err) {
+    console.error("🔥 MPESA ERROR:", err.response?.data || err.message);
 
-    if (!phone || !amount) {
-      return res.status(400).json({
-        error: "Phone and amount are required"
-      });
-    }
-
-    const result = await stkPush(phone, amount);
-    res.json(result);
-
-  } catch (error) {
-    console.error("STK Error:", error.message);
     res.status(500).json({
-      error: "Failed to initiate payment"
+      error: "Failed to initiate payment",
+      details: err.response?.data || err.message
     });
   }
 });
-
-export default router;
