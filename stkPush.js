@@ -17,7 +17,7 @@ export async function stkPush(phone, amount) {
     BusinessShortCode: process.env.SHORT_CODE,
     Password: password,
     Timestamp: timestamp,
-    TransactionType: "CustomerPayBillOnline",
+    TransactionType: "CustomerBuyGoodsOnline",
     Amount: amount,
     PartyA: phone,
     PartyB: process.env.SHORT_CODE,
