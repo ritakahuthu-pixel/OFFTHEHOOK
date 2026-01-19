@@ -16,7 +16,35 @@ app.get("/", (req, res) => {
   res.send("OFFTHEHOOK MPESA API RUNNING 🚀");
 });
 
-/* Routes */
+/* ============================
+   🤖 AI CHAT ENDPOINT
+=============================== */
+app.post("/ask", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({
+        error: "Prompt is required"
+      });
+    }
+
+    // ✅ Temporary reply (for testing)
+    res.json({
+      reply: `Hello Hakim 👋 You said: ${prompt}`
+    });
+
+  } catch (error) {
+    console.error("ASK ERROR:", error);
+    res.status(500).json({
+      error: "AI failed"
+    });
+  }
+});
+
+/* ============================
+   💳 PAYMENT ROUTES
+=============================== */
 app.use("/payment", paymentsRoute);
 app.use("/payment", callbackRoute);
 
