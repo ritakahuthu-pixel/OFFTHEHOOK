@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post("/stk-push", async (req, res) => {
   try {
-    const { phone, amount } = req.body;
+    let { phone, amount } = req.body;
 
     if (!phone || !amount) {
       return res.status(400).json({
@@ -13,7 +13,22 @@ router.post("/stk-push", async (req, res) => {
       });
     }
 
-    // ✅ PASS OBJECT (not separate parameters)
+    if (!phone.startsWith("254")) {
+      return res.status(400).json({
+        error: "Phone must be in format 2547XXXXXXXX"
+      });
+    }
+
+    amount = Number(amount);
+
+    if (isNaN(amount) || amount <= 0) {
+      return res.status(400).json({
+        error: "Invalid amount"
+      });
+    }
+
+    console.log("STK REQUEST:", { phone, amount });
+
     const result = await stkPush({
       phone,
       amount,
@@ -21,12 +36,12 @@ router.post("/stk-push", async (req, res) => {
       transactionDesc: "Payment"
     });
 
-    res.json(result);
+    return res.json(result);
 
   } catch (error) {
     console.error("❌ STK Error:", error.response?.data || error.message);
 
-    res.status(500).json({
+    return res.status(500).json({
       error: "Failed to initiate payment",
       details: error.response?.data
     });
