@@ -37,7 +37,7 @@ export async function stkPush({
     // ✅ TEMP: Hardcode callback to avoid env issues
     const callbackUrl =
       process.env.MPESA_CALLBACK_URL ||
-      "https://offthehook.onrender.com/payment/callback";
+      "https://hp-traders.onrender.com/payment/callback";
 
     if (!shortCode || !passkey || !callbackUrl) {
       throw new Error("Missing MPESA environment variables");
