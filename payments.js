@@ -17,7 +17,7 @@ router.post("/stk-push", async (req, res) => {
     const result = await stkPush({
       phone,
       amount,
-      accountReference: "OFFTHEHOOK",
+      accountReference: "HPTRADERS",
       transactionDesc: "Payment"
     });
 
